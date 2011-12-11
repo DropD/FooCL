@@ -1,7 +1,9 @@
 #ifndef FOO_CL_HPP
 #define FOO_CL_HPP
 
-#include "cl.hpp";
+#include "cl.hpp"
+#include "fcl_error.hpp"
+
 
 namespace fcl
 {
@@ -21,6 +23,16 @@ namespace fcl
             context = cl::Context(devices);
             queue = cl::CommandQueue(context, devices[0]);
         }
+        
+        cl::Context get_ctx()
+        {
+            return context;
+        }
+
+        std::vector<cl::Device> get_dev()
+        {
+            return devices;
+        }
     };
 
     class KernelFunc
@@ -36,6 +48,25 @@ namespace fcl
         public:
         KernelFunc(Environment env) : env(env)
         {
+        }
+
+        void build()
+        {
+            try
+            {
+                kernel_src = kernel_stream.str();
+                source = cl::Program::Sources(1, std::make_pair(kernel_src.c_str(), kernel_src.size()));
+                program = cl::Program(env.get_ctx(), source);
+                program.build(ctx.get_dev());
+                kernel = cl::Kernel(program, kernel_name);
+            }
+            catch (cl::Error err)
+            {
+                std::cerr
+                    << "ERROR: "
+                    << err.what()
+                    << " [" << get_error_msg(err.err()) << "]" << std::endl;
+            }
         }
     };
 }
