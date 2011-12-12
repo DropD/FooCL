@@ -4,6 +4,9 @@
 #include "cl.hpp"
 #include "fcl_error.hpp"
 
+#include <iostream>
+#include <sstream>
+
 
 namespace fcl
 {
@@ -44,11 +47,16 @@ namespace fcl
         cl::Program::Sources    source;
         cl::Program             program;
         cl::Kernel              kernel;
+        std::string             kernel_name;
+        std::string             build_log;
 
         public:
-        KernelFunc(Environment env) : env(env)
+        KernelFunc(Environment env, std::string kname) : env(env), kernel_name(kname)
         {
         }
+
+        template<class T>
+        friend std::stringstream& operator<< (KernelFunc& kern, const T inp);
 
         void build()
         {
@@ -57,10 +65,9 @@ namespace fcl
                 kernel_src = kernel_stream.str();
                 source = cl::Program::Sources(1, std::make_pair(kernel_src.c_str(), kernel_src.size()));
                 program = cl::Program(env.get_ctx(), source);
-                program.build(ctx.get_dev());
-                std::string build_log;
-                program.getBuildInfo(CL_PROGRAM_BUILD_LOG, &build_log);
-                kernel = cl::Kernel(program, kernel_name);
+                program.build(env.get_dev());
+                program.getBuildInfo(env.get_dev()[0], CL_PROGRAM_BUILD_LOG, &build_log);
+                kernel = cl::Kernel(program, kernel_name.c_str());
             }
             catch (cl::Error err)
             {
@@ -75,11 +82,12 @@ namespace fcl
     };
 
     template<class T>
-    KernelFunc& operator<< (KernelFunc& kern, const T inp)
+    std::stringstream& operator<< (KernelFunc &kern, const T inp)
     {
         kern.kernel_stream << inp;
-        return kern;
+        return kern.kernel_stream;
     }
+
 }
 
 #endif
