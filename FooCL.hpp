@@ -58,6 +58,8 @@ namespace fcl
                 source = cl::Program::Sources(1, std::make_pair(kernel_src.c_str(), kernel_src.size()));
                 program = cl::Program(env.get_ctx(), source);
                 program.build(ctx.get_dev());
+                std::string build_log;
+                program.getBuildInfo(CL_PROGRAM_BUILD_LOG, &build_log);
                 kernel = cl::Kernel(program, kernel_name);
             }
             catch (cl::Error err)
@@ -65,7 +67,9 @@ namespace fcl
                 std::cerr
                     << "ERROR: "
                     << err.what()
-                    << " [" << get_error_msg(err.err()) << "]" << std::endl;
+                    << " [" << get_error_msg(err.err()) << "]" << std::endl
+                    << " Build log (if any) follows:" << std::endl
+                    << build_log << std::endl;
             }
         }
     };
