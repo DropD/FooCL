@@ -73,6 +73,13 @@ namespace fcl
             }
         }
     };
+
+    template<class T>
+    KernelFunc& operator<< (KernelFunc& kern, const T inp)
+    {
+        kern.kernel_stream << inp;
+        return kern;
+    }
 }
 
 #endif
