@@ -1,6 +1,8 @@
 #ifndef FOO_CL_HPP
 #define FOO_CL_HPP
 
+#include <boost/spirit/include/qi.hpp>
+
 #include "cl.hpp"
 #include "fcl_error.hpp"
 
