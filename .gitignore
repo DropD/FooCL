@@ -1,0 +1,5 @@
+test
+build
+.*.swp
+.*.*.swp
+.*waf*
