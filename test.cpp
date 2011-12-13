@@ -1,7 +1,9 @@
 #include "FooCL.hpp"
+#include "parser.hpp"
 
 #include <iostream>
 #include <sstream>
+#include <string>
 
 int main (int argc, char const* argv[])
 {
@@ -17,6 +19,17 @@ int main (int argc, char const* argv[])
         << "}"                                  << std::endl;
 
     kernel.build();
+
+    std::string str("1, 2, 3, 4, 5");
+    if(fcl::parse_numbers(str.begin(), str.end()))
+    {
+        std::cout << "Parsing succeeded" << std::endl;
+        std::cout << str << " Parses OK" << std::endl;
+    }
+    else
+    {
+        std::cout << "Parsing failed" << std::endl;
+    }
     
     return 0;
 }

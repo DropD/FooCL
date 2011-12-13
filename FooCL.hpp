@@ -89,7 +89,6 @@ namespace fcl
         kern.kernel_stream << inp;
         return kern.kernel_stream;
     }
-
 }
 
 #endif
