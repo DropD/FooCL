@@ -42,7 +42,7 @@ namespace fcl
 
     class KernelFunc
     {
-        private:
+        protected:
         Environment env;
         std::stringstream       kernel_stream;
         std::string             kernel_src;
@@ -53,12 +53,21 @@ namespace fcl
         std::string             build_log;
 
         public:
+        KernelFunc() : env(Environment()), kernel_name("new_kernel") {}
         KernelFunc(Environment env, std::string kname) : env(env), kernel_name(kname)
         {
         }
 
+        //template <class T>
+        //friend std::stringstream& operator<< (KernelFunc& kern, const T inp);
+        //template <class T>
+        //KernelFunc& operator<< (const T inp)
+        //{
+        //    *this.kernel_stream << inp;
+        //    return *this;
+        //}
         template <class T>
-        friend std::stringstream& operator<< (KernelFunc& kern, const T inp);
+        friend KernelFunc& operator<< (KernelFunc& kern, const T inp);
 
         template <class os_type>
         friend os_type& operator<< (os_type &os, KernelFunc &kern);
@@ -86,11 +95,17 @@ namespace fcl
         }
     };
 
+    //template <class T>
+    //std::stringstream& operator<< (KernelFunc &kern, const T inp)
+    //{
+    //    kern.kernel_stream << inp;
+    //    return kern.kernel_stream;
+    //}
     template <class T>
-    std::stringstream& operator<< (KernelFunc &kern, const T inp)
+    KernelFunc& operator<< (KernelFunc &kern, const T inp)
     {
         kern.kernel_stream << inp;
-        return kern.kernel_stream;
+        return kern;
     }
 
     template <class os_type>
@@ -99,6 +114,19 @@ namespace fcl
         os << kern.kernel_stream.str();
         return os;
     }
+
+    class ExpKernel : public KernelFunc
+    {
+        public:
+        ExpKernel() : KernelFunc::KernelFunc() {}
+        ExpKernel(Environment env, std::string kname) : KernelFunc::KernelFunc(env, kname) {}
+        
+        ExpKernel& operator[] (std::string inp) 
+        {
+            *this << inp << "\n";
+            return *this;
+        }
+    };
 }
 
 #endif

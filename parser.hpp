@@ -7,6 +7,8 @@
 #include <iostream>
 #include <vector>
 
+#define $(string) #string
+
 namespace fcl
 {
     namespace qi = boost::spirit::qi;
@@ -34,10 +36,14 @@ namespace fcl
         return r;
     }
 
-    class KernelParser
+    struct qi_builtins_ : qi::symbols<char, unsigned>
     {
-        template<typename Iterator>
-        bool parse(Iterator first, Iterator last)
+    } qi_builtins;
+
+    template <typename Iterator>
+    struct KernelParser : qi::grammar<Iterator, KernelFunc()>
+    {
+        KernelParser() : KernelParser::base_type(start)
         {
             using qi::float_;
             using qi::int_;
@@ -45,15 +51,10 @@ namespace fcl
             using ascii::space;
             using boost::lambda::_1;
 
-            bool r = phrase_parse(
-                first, 
-                last,
-                space
-            );
-            if(first != last)
-                return false;
-            return r;
+            start = space;
         }
+
+        qi::rule<Iterator, KernelFunc()> start;
     };
 
     template <typename Iterator>

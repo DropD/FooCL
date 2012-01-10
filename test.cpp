@@ -12,16 +12,27 @@ int main (int argc, char const* argv[])
     fcl::KernelFunc kernel(env, "test_kernel");
 
     kernel
-        << "__kernel void test_kernel("         << std::endl
-        << "    void"                           << std::endl
-        << ")"                                  << std::endl
-        << "{"                                  << std::endl
-        << "    int tid = get_global_id(0);"    << std::endl
-        << "}"                                  << std::endl;
+        << "__kernel void test_kernel("         << "\n"
+        << "    void"                           << "\n"
+        << ")"                                  << "\n"
+        << "{"                                  << "\n"
+        << "    int tid = get_global_id(0);"    << "\n"
+        << "}"                                  << "\n";
 
     kernel.build();
 
-    std::cout << kernel <<  std::endl;
+    std::cout << "kernel: " << std::endl << kernel <<  std::endl;
+
+    {
+        fcl::ExpKernel kernel2(env, "exp_kernel");
+        kernel2
+            [ "__kernel void exp_kernel(" ]
+            [ ")" ]
+            [ "{" ]
+            [ "    int bla = 5;"]
+            [ "}" ];
+        std::cout << "kernel2: " << std::endl << kernel2 << std::endl;
+    }
 
     std::complex<double> c;
     std::vector<double> v;
