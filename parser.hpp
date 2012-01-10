@@ -4,8 +4,12 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <boost/lambda/lambda.hpp>
+#include <boost/variant/recursive_variant.hpp>
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/config/warning_disable.hpp>
 #include <iostream>
 #include <vector>
+#include <string>
 
 #define $(string) #string
 
@@ -14,6 +18,7 @@ namespace fcl
     namespace qi = boost::spirit::qi;
     namespace ascii = boost::spirit::ascii;
     namespace phoenix = boost::phoenix;
+    namespace fusion = boost::fusion;
 
     std::vector<double> dvec;
 
@@ -43,18 +48,40 @@ namespace fcl
     template <typename Iterator>
     struct KernelParser : qi::grammar<Iterator, KernelFunc()>
     {
-        KernelParser() : KernelParser::base_type(start)
+        KernelParser() : KernelParser::base_type(kernel_)
         {
             using qi::float_;
             using qi::int_;
             using qi::phrase_parse;
             using ascii::space;
             using boost::lambda::_1;
+            using qi::lit;
 
-            start = space;
+            start_paren %= '(';
+            end_paren %= ')';
+
+            type_ = lit("int") | "uint" | "float" | "int*" | "uint*" | "float*";
+            identifier_ = lexeme[+(char_ - (',' | ')')];
+
+            arg_ %= type_ >> identifier_;
+            args_ %= arg_ % ',';
+
+            sig_ %=
+                lit("__kernel") >> "void" >> name_ >> start_paren
+                >> args_ >> end_paren;
+
+            kernel_ = space;
         }
 
-        qi::rule<Iterator, KernelFunc()> start;
+        qi::rule<Iterator, KernelFunc()> kernel_;
+        qi::rule<Iterator, std::string()> sig_;
+        qi::rule<Iterator, std::string()> name_;
+        qi::rule<Iterator, std::string()> arg_;
+        qi::rule<Iterator, std::vector<std::string>()> args_;
+        qi::rule<Iterator, std::string()> start_paren;
+        qi::rule<Iterator, std::string()> end_paren;
+        qi::rule<Iterator, std::string()> type_;
+        qi::rule<Iterator, std::string()> identifier_;
     };
 
     template <typename Iterator>
@@ -195,6 +222,84 @@ namespace fcl
         roman<Iterator> roman_parser;
         bool r = parse(first, last, roman_parser, result);
         
+        if(first != last)
+            return false;
+        return r;
+    }
+
+    struct mini_xml;
+    typedef boost::variant<boost::recursive_wrapper<mini_xml>, std::string> mini_xml_node;
+    struct mini_xml
+    {
+        std::string name;
+        std::vector<mini_xml_node> children;
+    };
+}
+
+BOOST_FUSION_ADAPT_STRUCT(
+    fcl::mini_xml,
+    (std::string, name)
+    (std::vector<fcl::mini_xml_node>, children)
+)
+
+namespace fcl
+{
+    namespace qi = boost::spirit::qi;
+    namespace ascii = boost::spirit::ascii;
+    namespace phoenix = boost::phoenix;
+    namespace fusion = boost::fusion;
+
+    template <typename Iterator>
+    struct mini_xml_grammar : qi::grammar<Iterator, mini_xml(), ascii::space_type>
+    {
+        mini_xml_grammar() : mini_xml_grammar::base_type(xml)
+        {
+            using qi::lit;
+            using qi::lexeme;
+            using ascii::char_;
+            using namespace qi::labels;
+
+            using phoenix::at_c;
+            using phoenix::push_back;
+
+            text = lexeme[+(char_ - '<')    [_val += _1]];
+            node = (xml | text)             [_val = _1];
+
+            start_tag = 
+                    '<'
+                >> !lit('/')
+                >> lexeme[+(char_ - '>')    [_val += _1]]
+                >> '>'
+            ;
+
+            end_tag =
+                    "</"
+                >> lit(_r1)
+                >> '>'
+            ;
+
+            xml = 
+                    start_tag       [at_c<0>(_val) = _1]
+                >> *node            [push_back(at_c<1>(_val), _1)]
+                >> end_tag(at_c<0>(_val))
+            ;
+        }
+
+        qi::rule<Iterator, mini_xml(), ascii::space_type> xml;
+        qi::rule<Iterator, mini_xml_node(), ascii::space_type> node;
+        qi::rule<Iterator, std::string(), ascii::space_type> text;
+        qi::rule<Iterator, std::string(), ascii::space_type> start_tag;
+        qi::rule<Iterator, void(std::string), ascii::space_type> end_tag;
+    };
+
+    template <typename Iterator>
+    bool parse_mini_xml(Iterator first, Iterator last, mini_xml& result)
+    {
+        using ascii::space;
+        using qi::phrase_parse;
+        mini_xml_grammar<Iterator> mini_xml_parser;
+        bool r = phrase_parse(first, last, mini_xml_parser, space, result);
+
         if(first != last)
             return false;
         return r;

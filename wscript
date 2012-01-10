@@ -32,6 +32,17 @@ def build(ctx):
                install_path = './',
                rule         = '${CXX} ${INC_FLAGS} ${SRC} -o ${TGT} ${OCL_FLAGS} && ./${TGT}')
 
+    #mxp  = ctx(source       = 'mini_xml1.cpp',
+    #           target       = 'mini_xml1',
+    #           rule         = '${CXX} ${INC_FLAGS} ${SRC} -o ${TGT}')
+
+    mxp = ctx.program(source  = 'mini_xml1.cpp',
+                      target  = 'mini_xml1',
+                      include = '. /usr/local')
+
+    #run = ctx(source = 'mini_xml1',
+    #          rule   = './${SRC}')
+
 def install(ctx):
     test = ctx(source       = 'test',
                rule         = 'chmod 755 ${SRC}')
