@@ -28,8 +28,9 @@ def configure(ctx):
 def build(ctx):
     test = ctx(source       = 'test.cpp',
                target       = 'test',
+               deps         = 'parser.hpp FooCL.hpp',
                install_path = './',
-               rule         = '${CXX} ${INC_FLAGS} ${SRC} -o ${TGT} ${OCL_FLAGS}')
+               rule         = '${CXX} ${INC_FLAGS} ${SRC} -o ${TGT} ${OCL_FLAGS} && ./${TGT}')
 
 def install(ctx):
     test = ctx(source       = 'test',

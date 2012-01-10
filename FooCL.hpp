@@ -57,8 +57,11 @@ namespace fcl
         {
         }
 
-        template<class T>
+        template <class T>
         friend std::stringstream& operator<< (KernelFunc& kern, const T inp);
+
+        template <class os_type>
+        friend os_type& operator<< (os_type &os, KernelFunc &kern);
 
         void build()
         {
@@ -83,11 +86,18 @@ namespace fcl
         }
     };
 
-    template<class T>
+    template <class T>
     std::stringstream& operator<< (KernelFunc &kern, const T inp)
     {
         kern.kernel_stream << inp;
         return kern.kernel_stream;
+    }
+
+    template <class os_type>
+    os_type& operator<< (os_type &os, KernelFunc &kern)
+    {
+        os << kern.kernel_stream.str();
+        return os;
     }
 }
 
