@@ -61,7 +61,7 @@ namespace fcl
             end_paren %= ')';
 
             type_ = lit("int") | "uint" | "float" | "int*" | "uint*" | "float*";
-            identifier_ = lexeme[+(char_ - (',' | ')')];
+            identifier_ = lexeme[+(char_ - (',' | ')'))];
 
             arg_ %= type_ >> identifier_;
             args_ %= arg_ % ',';
